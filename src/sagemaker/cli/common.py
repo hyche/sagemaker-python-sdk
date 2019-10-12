@@ -109,7 +109,7 @@ class TrainCommand(object):
         self.instance_count = args.instance_count
         self.hyperparameters = self.load_hyperparameters(args.hyperparameters)
 
-        self.session = sagemaker.Session()
+        self.session = None
 
     @staticmethod
     def load_hyperparameters(src):
@@ -135,8 +135,13 @@ class TrainCommand(object):
 
     def start(self):
         """Placeholder docstring"""
-        data_url = self.upload_training_data()
+
         estimator = self.create_estimator()
+        self.session = estimator.sagemaker_session
+        if not self.session.local_mode:
+            data_url = self.upload_training_data()
+        else:
+            data_url = ''
         estimator.fit(data_url)
         logger.debug("code location: %s", estimator.uploaded_code.s3_prefix)
         logger.debug(
